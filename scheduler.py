@@ -275,20 +275,20 @@ def send_sms(to_number, message):
 
     try:
 
-        # sms = twilio_client.messages.create(
-        #     body=message,
-        #     from_=TWILIO_FROM_NUMBER,
-        #     to=to_number
-        # )
+        sms = twilio_client.messages.create(
+            body=message,
+            from_=TWILIO_FROM_NUMBER,
+            to=to_number
+        )
 
-        # print("========================================")
-        # print("( SMS )SENT SUCCESSFULLY")
-        # print("Message SID:", sms.sid)
-        # print("Message Status:", sms.status)
-        # print("Message Body:", sms.body)
-        # print("To:", to_number)
-        # print("Message:", message)
-        # print("========================================")
+        print("========================================")
+        print("( SMS )SENT SUCCESSFULLY")
+        print("Message SID:", sms.sid)
+        print("Message Status:", sms.status)
+        print("Message Body:", sms.body)
+        print("To:", to_number)
+        print("Message:", message)
+        print("========================================")
 
 
         # ========================================
