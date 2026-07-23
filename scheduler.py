@@ -1,4 +1,238 @@
 
+# from datetime import datetime
+# import time
+
+
+# def check_devices(sheet, doctor_sheet, doctor_sheet_oxy):
+
+#     while True:
+
+#         patients = sheet.get_all_records()
+#         bpms = doctor_sheet.get_all_records()
+#         oxys = doctor_sheet_oxy.get_all_records()
+
+#         for patient in patients:
+
+#             patient_id = patient.get("Patient Num")
+
+#             bpm_mac = patient.get("bpm_mac_id")
+#             pox_mac = patient.get("pox_mac_id")
+
+       
+#             # BPM CHECK
+#             if bpm_mac:
+
+#                 bpm = next(
+
+#                     (
+#                         x for x in bpms
+#                         if x.get("patient_id") == patient_id
+#                         and x.get("bpm_mac_id") == bpm_mac
+#                     ),
+
+#                     None
+
+#                 )
+
+#                 if bpm:
+
+#                     reading = bpm.get("reading_date")
+
+#                     if reading:
+
+#                         reading_time = datetime.strptime(
+#                             reading,
+#                             "%m/%d/%Y %I:%M:%S %p"
+#                         )
+
+#                         diff = datetime.now() - reading_time
+
+#                         if diff.total_seconds() >= 300:
+
+#                             print(
+#                                 patient["First"],
+#                                 "Please check your BP."
+#                             )
+
+#                         else:
+
+#                             print(
+#                                 patient["First"],
+#                                 "BP Reading is recent."
+#                             )
+
+    
+#             # OXY CHECK
+#             if pox_mac:
+
+#                 oxy = next(
+
+#                     (
+#                         x for x in oxys
+#                         if x.get("patient_id") == patient_id
+#                         and x.get("pox_mac_id") == pox_mac
+#                     ),
+
+#                     None
+
+#                 )
+
+#                 if oxy:
+
+#                     reading = oxy.get("reading_date")
+
+#                     if reading:
+
+#                         reading_time = datetime.strptime(
+#                             reading,
+#                             "%m/%d/%Y %I:%M:%S %p"
+#                         )
+
+#                         diff = datetime.now() - reading_time
+
+#                         if diff.total_seconds() >= 300:
+
+#                             print(
+#                                 patient["First"],
+#                                 "Please check your POX Monitor."
+#                             )
+
+#                         else:
+
+#                             print(
+#                                 patient["First"],
+#                                 "POX Reading is recent."
+#                             )
+
+#         time.sleep(60)
+
+
+
+
+
+
+
+# from datetime import datetime
+# import pandas as pd
+# import numpy as np
+# import time
+
+
+# def check_devices(sheet, doctor_sheet, doctor_sheet_oxy):
+
+#     while True:
+
+#         # -----------------------------
+#         # Read Google Sheet Data
+#         # -----------------------------
+#         patients = sheet.get_all_records()
+#         # print(patients)
+#         bpms = doctor_sheet.get_all_records()
+#         oxys = doctor_sheet_oxy.get_all_records()
+
+#         # -----------------------------
+#         # Convert to DataFrame
+#         # -----------------------------
+#         patient_df = pd.DataFrame(patients)
+#         # print(patient_df) pd.DataFrame is convertin into excel formet data
+#         bpm_df = pd.DataFrame(bpms)
+#         oxy_df = pd.DataFrame(oxys)
+
+#         # =====================================================
+#         # BPM
+#         # =====================================================
+
+#         bpm_merge = patient_df.merge(
+#             bpm_df,
+#             how="left",
+#             left_on=["Patient Num", "bpm_mac_id"],
+#             right_on=["patient_id", "bpm_mac_id"]
+#         )   
+#         # print(bpm_merge )
+
+#         bpm_merge["reading_date"] = pd.to_datetime(
+#             bpm_merge["reading_date"],
+#             format="%m/%d/%Y %I:%M:%S %p",
+#             errors="coerce"
+#         ) # string date and time convert into Timestamp('2026-07-17 19:30:00')
+#         # print(type(bpm_merge["reading_date"][0]))
+    
+    
+
+#         bpm_merge["diff_seconds"] = (
+#             datetime.now() - bpm_merge["reading_date"]
+#         ).dt.total_seconds()
+#         # print(bpm_merge["diff_seconds"])
+
+#         bpm_merge["message"] = np.where(
+#             bpm_merge["diff_seconds"] >= 300,
+#             "Please check your BP.",
+#             "BP Reading is recent."
+#         )
+
+#         # =====================================================
+#         # OXY
+#         # =====================================================
+
+#         oxy_merge = patient_df.merge(
+#             oxy_df,
+#             how="left",
+#             left_on=["Patient Num", "pox_mac_id"],
+#             right_on=["patient_id", "pox_mac_id"]
+#         )
+
+#         oxy_merge["reading_date"] = pd.to_datetime(
+#             oxy_merge["reading_date"],
+#             format="%m/%d/%Y %I:%M:%S %p",
+#             errors="coerce"
+#         )
+
+#         oxy_merge["diff_seconds"] = (
+#             datetime.now() - oxy_merge["reading_date"]
+#         ).dt.total_seconds()
+
+#         oxy_merge["message"] = np.where(
+#             oxy_merge["diff_seconds"] >= 300,
+#             "Please check your POX Monitor.",
+#             "POX Reading is recent."
+#         )
+
+#         # =====================================================
+#         # Print BPM Result
+#         # =====================================================
+
+#         for _, row in bpm_merge.iterrows():
+#             # print(row)
+
+#             if pd.notna(row["reading_date"]):
+
+#                 print(row["First"], "-", row["message"])
+
+#         # =====================================================
+#         # Print OXY Result
+#         # =====================================================
+
+#         for _, row in oxy_merge.iterrows():
+
+#             if pd.notna(row["reading_date"]):
+
+#                 print(row["First"], "-", row["message"])
+
+#         print("========================================")
+
+#         time.sleep(60)
+
+
+
+
+
+
+
+
+
+
+
+
 
 from datetime import datetime
 import pandas as pd
@@ -60,7 +294,7 @@ def send_sms(to_number, message):
         # ========================================
         # CHECK SMS CURRENT STATUS
         # ========================================
-        message_status = twilio_client.messages("SM5a879bcc6ec651314a73934e039816e5").fetch()
+        message_status = twilio_client.messages(sms.sid).fetch()
         print("========================================")
         print("CHECK SMS CURRENT STATUS")
         print("Message SID:", message_status.sid)
