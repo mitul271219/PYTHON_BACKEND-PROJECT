@@ -58,30 +58,22 @@ def check_bpm(patient_df, bpm_df):
         # ----------------------------------------------
         # GET PATIENT NAME
         # ----------------------------------------------
-        patient_name = str(
-            row.get("First", "")
-        ).strip()
+        patient_name = str(row.get("First", "")).strip()
 
         # ----------------------------------------------
         # GET MOBILE NUMBER
         # ----------------------------------------------
-        mobile = format_mobile_number(
-            row.get("Mobile")
-        )
+        mobile = format_mobile_number(row.get("Mobile"))
 
         # ----------------------------------------------
         # GET READING DATE
         # ----------------------------------------------
-        reading_date = row.get(
-            "reading_date"
-        )
+        reading_date = row.get("reading_date")
 
         # ----------------------------------------------
         # GET DIFFERENCE IN SECONDS
         # ----------------------------------------------
-        diff_seconds = row.get(
-            "diff_seconds"
-        )
+        diff_seconds = row.get("diff_seconds")
 
         # ----------------------------------------------
         # CHECK IF READING EXISTS
@@ -98,26 +90,13 @@ def check_bpm(patient_df, bpm_df):
         # ----------------------------------------------
         # PRINT READING INFORMATION
         # ----------------------------------------------
-        print(
-            "Patient:",
-            patient_name
-        )
+        print("Patient:",patient_name)
 
-        print(
-            "Mobile:",
-            mobile
-        )
+        print("Mobile:",mobile)
 
-        print(
-            "BPM Reading Time:",
-            reading_date
-        )
+        print("BPM Reading Time:",reading_date)
 
-        print(
-            "Reading Age:",
-            round(diff_seconds),
-            "seconds"
-        )
+        print("Reading Age:",round(diff_seconds),"seconds")
 
 
         # =================================================
@@ -132,7 +111,6 @@ def check_bpm(patient_df, bpm_df):
                 patient_name + " BPM STATUS:",
                 message
             )
-
 
         else:
             # --------------------------------------------
