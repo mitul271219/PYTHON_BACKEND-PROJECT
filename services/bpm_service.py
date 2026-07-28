@@ -1,3 +1,8 @@
+
+
+# improve and fast code , 
+
+
 from datetime import datetime
 
 import pandas as pd
@@ -5,137 +10,146 @@ import pandas as pd
 from services.sms_service import send_sms
 from utils.phone_utils import format_mobile_number
 
+
 def check_bpm(patient_df, bpm_df):
-    print("\n")
-    print("========================================")
+
+    print("\n========================================")
     print("CHECKING BPM DEVICES")
     print("========================================")
 
+    required_bpm_columns = [
+        "patient_id",
+        "bpm_mac_id",
+        "reading_date"
+    ]
 
-    # ----------------------------------------------------
-    # MERGE PATIENT SHEET WITH BPM SHEET
-    # ----------------------------------------------------
-    bpm_merge = patient_df.merge(
-        bpm_df,
-        how="left",
-        left_on=["Patient Num","bpm_mac_id"],
-        right_on=["patient_id","bpm_mac_id" ]
-    )
+    bpm_df = bpm_df[
+        required_bpm_columns
+    ].copy()
 
-
-    # ----------------------------------------------------
-    # CONVERT BPM READING DATE
-    # ----------------------------------------------------
-    bpm_merge["reading_date"] = pd.to_datetime(
-        bpm_merge["reading_date"],
+    bpm_df["reading_date"] = pd.to_datetime(
+        bpm_df["reading_date"],
         format="%m/%d/%Y %I:%M:%S %p",
         errors="coerce"
     )
-        # string date and time convert into (datetime object) Timestamp('2026-07-17 19:30:00')
 
+    bpm_df = bpm_df.dropna(
+        subset=["reading_date"]
+    )
 
-    # ----------------------------------------------------
-    # CALCULATE BPM READING AGE
-    # ----------------------------------------------------
-    bpm_merge["diff_seconds"] = (
-        datetime.now() - bpm_merge["reading_date"]
-    ).dt.total_seconds()
+    bpm_df = (
+        bpm_df
+        .sort_values(
+            "reading_date",
+            ascending=False
+        )
+        .drop_duplicates(
+            subset=["patient_id"],
+            keep="first"
+        )
+    )
 
+    print("\nLATEST BPM READINGS")
+    print("========================================")
 
-    #         oxy_merge["message"] = np.where(
-    #             oxy_merge["diff_seconds"] >= 300,
-    #             "Please check your POX Monitor.",
-    #             "POX Reading is recent."
-    #         )
+    print(
+        bpm_df[
+            [
+                "patient_id",
+                "bpm_mac_id",
+                "reading_date"
+            ]
+        ].to_string(index=False)
+    )
 
+    bpm_merge = patient_df.merge(
+        bpm_df,
+        how="left",
+        left_on=[
+            "Patient Num",
+            "bpm_mac_id"
+        ],
+        right_on=[
+            "patient_id",
+            "bpm_mac_id"
+        ]
+    )
 
-    # ----------------------------------------------------
-    # LOOP THROUGH BPM PATIENTS
-    # ----------------------------------------------------
-    for _, row in bpm_merge.iterrows():
-        # print(row)
+    current_time = datetime.now()
 
-        # ----------------------------------------------
-        # GET PATIENT NAME
-        # ----------------------------------------------
-        patient_name = str(row.get("First", "")).strip()
+    for row in bpm_merge.itertuples(index=False):
 
-        # ----------------------------------------------
-        # GET MOBILE NUMBER
-        # ----------------------------------------------
-        mobile = format_mobile_number(row.get("Mobile"))
+        patient_name = str(
+            getattr(row, "First", "")
+        ).strip()
 
-        # ----------------------------------------------
-        # GET READING DATE
-        # ----------------------------------------------
-        reading_date = row.get("reading_date")
+        mobile = format_mobile_number(
+            getattr(row, "Mobile", None)
+        )
 
-        # ----------------------------------------------
-        # GET DIFFERENCE IN SECONDS
-        # ----------------------------------------------
-        diff_seconds = row.get("diff_seconds")
+        reading_date = getattr(
+            row,
+            "reading_date",
+            None
+        )
 
-        # ----------------------------------------------
-        # CHECK IF READING EXISTS
-        # ----------------------------------------------
-        if pd.isna(reading_date):   # (NaT) ya (NaN) 
+        if pd.isna(reading_date):
+
             print(
-                patient_name,
-                "- BPM reading not available"
+                f"{patient_name} - BPM reading not available"
             )
 
             continue
 
+        diff_seconds = (
+            current_time - reading_date
+        ).total_seconds()
 
-        # ----------------------------------------------
-        # PRINT READING INFORMATION
-        # ----------------------------------------------
-        print("Patient:",patient_name)
+        print("----------------------------------------")
 
-        print("Mobile:",mobile)
+        print(
+            f"Patient: {patient_name}"
+        )
 
-        print("BPM Reading Time:",reading_date)
+        print(
+            f"Mobile: {mobile}"
+        )
 
-        print("Reading Age:",round(diff_seconds),"seconds")
+        print(
+            f"BPM Reading Time: {reading_date}"
+        )
 
+        print(
+            f"Reading Age: {round(diff_seconds)} seconds"
+        )
 
-        # =================================================
-        # BPM STATUS
-        # =================================================
         if diff_seconds >= 300:
-            # --------------------------------------------
-            # BPM OLD READING
-            # --------------------------------------------
+
             message = "Please check your BP"
+
             print(
-                patient_name + " BPM STATUS:",
-                message
+                f"{patient_name} BPM STATUS: {message}"
             )
 
         else:
-            # --------------------------------------------
-            # BPM RECENT READING
-            # --------------------------------------------
+
             message = "BPM STATUS: READING IS RECENT"
+
             print(
-                patient_name + " BPM STATUS:",
-                message
+                f"{patient_name} BPM STATUS: {message}"
             )
 
-
-        # =================================================
-        # SEND BPM SMS
-        # =================================================
         if mobile:
+
             send_sms(
                 mobile,
                 message
             )
 
         else:
+
             print(
-                "Mobile number not available for",
-                patient_name
+                f"Mobile number not available for {patient_name}"
             )
 
         print("----------------------------------------")

@@ -1,3 +1,7 @@
+
+
+# improve and fast code ,
+
 from datetime import datetime
 
 import pandas as pd
@@ -7,18 +11,56 @@ from utils.phone_utils import format_mobile_number
 
 
 def check_oxy(patient_df, oxy_df):
-    # ====================================================
-    # OXY SECTION
-    # ====================================================  
-    print("\n")
-    print("========================================")
+
+    print("\n========================================")
     print("CHECKING OXY DEVICES")
     print("========================================")
 
+    required_oxy_columns = [
+        "patient_id",
+        "pox_mac_id",
+        "reading_date"
+    ]
 
-    # ----------------------------------------------------
-    # MERGE PATIENT SHEET WITH OXY SHEET
-    # ----------------------------------------------------
+    oxy_df = oxy_df[
+        required_oxy_columns
+    ].copy()
+
+    oxy_df["reading_date"] = pd.to_datetime(
+        oxy_df["reading_date"],
+        format="%m/%d/%Y %I:%M:%S %p",
+        errors="coerce"
+    )
+
+    oxy_df = oxy_df.dropna(
+        subset=["reading_date"]
+    )
+
+    oxy_df = (
+        oxy_df
+        .sort_values(
+            "reading_date",
+            ascending=False
+        )
+        .drop_duplicates(
+            subset=["patient_id"],
+            keep="first"
+        )
+    )
+
+    print("\nLATEST OXY READINGS")
+    print("========================================")
+
+    print(
+        oxy_df[
+            [
+                "patient_id",
+                "pox_mac_id",
+                "reading_date"
+            ]
+        ].to_string(index=False)
+    )
+
     oxy_merge = patient_df.merge(
         oxy_df,
         how="left",
@@ -32,130 +74,70 @@ def check_oxy(patient_df, oxy_df):
         ]
     )
 
+    current_time = datetime.now()
 
-    # ----------------------------------------------------
-    # CONVERT OXY READING DATE
-    # ----------------------------------------------------
-    oxy_merge["reading_date"] = pd.to_datetime(
-        oxy_merge["reading_date"],
-        format="%m/%d/%Y %I:%M:%S %p",
-        errors="coerce"
-    )
+    for row in oxy_merge.itertuples(index=False):
 
-
-    # ----------------------------------------------------
-    # CALCULATE OXY READING AGE
-    # ----------------------------------------------------
-    oxy_merge["diff_seconds"] = (
-        datetime.now()
-        - oxy_merge["reading_date"]
-    ).dt.total_seconds()
-
-
-    # ----------------------------------------------------
-    # LOOP THROUGH OXY PATIENTS
-    # ----------------------------------------------------
-    for _, row in oxy_merge.iterrows():
-
-        # ----------------------------------------------
-        # GET PATIENT NAME
-        # ----------------------------------------------
         patient_name = str(
-            row.get("First", "")
+            getattr(row, "First", "")
         ).strip()
 
-
-        # ----------------------------------------------
-        # GET MOBILE NUMBER
-        # ----------------------------------------------
         mobile = format_mobile_number(
-            row.get("Mobile")
+            getattr(row, "Mobile", None)
         )
 
-
-        # ----------------------------------------------
-        # GET READING DATE
-        # ----------------------------------------------
-        reading_date = row.get(
-            "reading_date"
+        reading_date = getattr(
+            row,
+            "reading_date",
+            None
         )
 
-
-        # ----------------------------------------------
-        # GET DIFFERENCE IN SECONDS
-        # ----------------------------------------------
-        diff_seconds = row.get(
-            "diff_seconds"
-        )
-
-
-        # ----------------------------------------------
-        # CHECK IF READING EXISTS
-        # ----------------------------------------------
         if pd.isna(reading_date):
+
             print(
-                patient_name,
-                "- OXY reading not available"
+                f"{patient_name} - OXY reading not available"
             )
 
             continue
 
+        diff_seconds = (
+            current_time - reading_date
+        ).total_seconds()
 
-        # ----------------------------------------------
-        # PRINT READING INFORMATION
-        # ----------------------------------------------
+        print("----------------------------------------")
+
         print(
-            "Patient:",
-            patient_name
+            f"Patient: {patient_name}"
         )
 
         print(
-            "Mobile:",
-            mobile
+            f"Mobile: {mobile}"
         )
 
         print(
-            "OXY Reading Time:",
-            reading_date
+            f"OXY Reading Time: {reading_date}"
         )
 
         print(
-            "Reading Age:",
-            round(diff_seconds),
-            "seconds"
+            f"Reading Age: {round(diff_seconds)} seconds"
         )
 
-
-        # =================================================
-        # OXY STATUS
-        # =================================================
         if diff_seconds >= 300:
 
-            # --------------------------------------------
-            # OXY OLD READING
-            # --------------------------------------------
             message = "Please check your POX Monitor"
-            print(
-                "OXY STATUS:",
-                message
-            )
 
+            print(
+                f"{patient_name} OXY STATUS: {message}"
+            )
 
         else:
 
-            # --------------------------------------------
-            # OXY RECENT READING
-            # --------------------------------------------
             message = "OXY STATUS: READING IS RECENT"
+
             print(
-                "OXY STATUS:",
-                message
+                f"{patient_name} OXY STATUS: {message}"
             )
 
-
-        # =================================================
-        # SEND OXY SMS
-        # =================================================
         if mobile:
 
             send_sms(
@@ -166,8 +148,166 @@ def check_oxy(patient_df, oxy_df):
         else:
 
             print(
-                "Mobile number not available for",
-                patient_name
+                f"Mobile number not available for {patient_name}"
             )
 
         print("----------------------------------------")
+
+
+
+
+
+
+
+
+
+
+# from datetime import datetime
+
+# import pandas as pd
+
+# from services.sms_service import send_sms
+# from utils.phone_utils import format_mobile_number
+
+# def check_oxy(patient_df, oxy_df):
+
+# print("\n========================================")
+# print("CHECKING OXY DEVICES")
+# print("========================================")
+
+# required_oxy_columns = [
+#     "patient_id",
+#     "pox_mac_id",
+#     "reading_date"
+# ]
+
+# oxy_df = oxy_df[
+#     required_oxy_columns
+# ].copy()
+
+# oxy_df["reading_date"] = pd.to_datetime(
+#     oxy_df["reading_date"],
+#     format="%m/%d/%Y %I:%M:%S %p",
+#     errors="coerce"
+# )
+
+# oxy_df = oxy_df.dropna(
+#     subset=["reading_date"]
+# )
+
+# oxy_df = (
+#     oxy_df
+#     .sort_values(
+#         "reading_date",
+#         ascending=False
+#     )
+#     .drop_duplicates(
+#         subset=["patient_id"],
+#         keep="first"
+#     )
+# )
+
+# print("\nLATEST OXY READINGS")
+# print("========================================")
+
+# print(
+#     oxy_df[
+#         [
+#             "patient_id",
+#             "pox_mac_id",
+#             "reading_date"
+#         ]
+#     ].to_string(index=False)
+# )
+
+# oxy_merge = patient_df.merge(
+#     oxy_df,
+#     how="left",
+#     left_on=[
+#         "Patient Num",
+#         "pox_mac_id"
+#     ],
+#     right_on=[
+#         "patient_id",
+#         "pox_mac_id"
+#     ]
+# )
+
+# current_time = datetime.now()
+
+# for row in oxy_merge.itertuples(index=False):
+
+#     patient_name = str(
+#         getattr(row, "First", "")
+#     ).strip()
+
+#     mobile = format_mobile_number(
+#         getattr(row, "Mobile", None)
+#     )
+
+#     reading_date = getattr(
+#         row,
+#         "reading_date",
+#         None
+#     )
+
+#     if pd.isna(reading_date):
+
+#         print(
+#             f"{patient_name} - OXY reading not available"
+#         )
+
+#         continue
+
+#     diff_seconds = (
+#         current_time - reading_date
+#     ).total_seconds()
+
+#     print("----------------------------------------")
+
+#     print(
+#         f"Patient: {patient_name}"
+#     )
+
+#     print(
+#         f"Mobile: {mobile}"
+#     )
+
+#     print(
+#         f"OXY Reading Time: {reading_date}"
+#     )
+
+#     print(
+#         f"Reading Age: {round(diff_seconds)} seconds"
+#     )
+
+#     if diff_seconds >= 300:
+
+#         message = "Please check your POX Monitor"
+
+#         print(
+#             f"{patient_name} OXY STATUS: {message}"
+#         )
+
+#     else:
+
+#         message = "OXY STATUS: READING IS RECENT"
+
+#         print(
+#             f"{patient_name} OXY STATUS: {message}"
+#         )
+
+#     if mobile:
+
+#         send_sms(
+#             mobile,
+#             message
+#         )
+
+#     else:
+
+#         print(
+#             f"Mobile number not available for {patient_name}"
+#         )
+
+#     print("----------------------------------------")
