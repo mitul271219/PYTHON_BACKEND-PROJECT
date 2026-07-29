@@ -1,10 +1,5 @@
 
 
-
-
-
-
-
 import pandas as pd
 
 from google_sheets import (
@@ -25,38 +20,49 @@ def check_devices():
 
     print("\n")
     print("========================================")
-    print("CHECKING DEVICES")
+    print("STARTING DAILY DEVICE CHECK")
     print("========================================")
 
 
     try:
 
         # ====================================================
-        # GET PATIENT DATA
+        # GET DATA FROM GOOGLE SHEETS
         # ====================================================
+
+        print("Fetching Patient data...")
         patients = patient_sheet.get_all_records()
 
-        # ====================================================
-        # GET BPM DATA
-        # ====================================================
+
+        print("Fetching BPM data...")
         bpms = bpm_sheet.get_all_records()
 
-        # ====================================================
-        # GET OXY DATA
-        # ====================================================
+
+        print("Fetching OXY data...")
         oxys = oxy_sheet.get_all_records()
 
+
         # ====================================================
-        # CONVERT DATA TO DATAFRAME
+        # CONVERT TO DATAFRAME
         # ====================================================
-        patient_df = pd.DataFrame(patients)
-        bpm_df = pd.DataFrame(bpms)
-        oxy_df = pd.DataFrame(oxys)
-        # print(patient_df) pd.DataFrame is convertin into excel table format data
+
+        patient_df = pd.DataFrame(
+            patients
+        )
+
+        bpm_df = pd.DataFrame(
+            bpms
+        )
+
+        oxy_df = pd.DataFrame(
+            oxys
+        )
+
 
         # ====================================================
         # CHECK BPM
         # ====================================================
+
         print("\n")
         print("STARTING BPM CHECK")
 
@@ -69,6 +75,7 @@ def check_devices():
         # ====================================================
         # CHECK OXY
         # ====================================================
+
         print("\n")
         print("STARTING OXY CHECK")
 
@@ -84,7 +91,7 @@ def check_devices():
 
         print("\n")
         print("========================================")
-        print("DEVICE CHECK COMPLETED")
+        print("DAILY DEVICE CHECK COMPLETED")
         print("========================================")
 
 
@@ -92,17 +99,24 @@ def check_devices():
 
             "success": True,
 
-            "message": "BPM and OXY devices checked successfully"
+            "message":
+                "BPM and OXY devices checked successfully"
 
         }
 
 
     except Exception as e:
 
+
+        # ====================================================
+        # ERROR
+        # ====================================================
+
         print("\n")
         print("========================================")
         print("DEVICE CHECK ERROR")
         print("========================================")
+
 
         print(
             "Error:",

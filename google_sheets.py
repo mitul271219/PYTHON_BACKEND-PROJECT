@@ -1,3 +1,8 @@
+
+
+
+import os
+
 import gspread
 
 from google.oauth2.service_account import Credentials
@@ -6,7 +11,8 @@ from google.oauth2.service_account import Credentials
 # ============================================================
 # GOOGLE SHEETS SCOPES
 # ============================================================
-scope = [
+
+SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
@@ -15,29 +21,56 @@ scope = [
 # ============================================================
 # GOOGLE CREDENTIALS
 # ============================================================
+
+CREDENTIALS_FILE = os.getenv(
+    "GOOGLE_CREDENTIALS_FILE",
+    "credentials.json"
+)
+
+
 creds = Credentials.from_service_account_file(
-    "credentials.json",
-    scopes=scope
+    CREDENTIALS_FILE,
+    scopes=SCOPES
 )
 
 
 # ============================================================
 # GOOGLE SHEETS CLIENT
 # ============================================================
+
 client = gspread.authorize(creds)
 
 
 # ============================================================
-# PATIENT SHEET
+# OPEN SPREADSHEETS ONCE
 # ============================================================
-patient_sheet = client.open("Patient Database").worksheet("PatientSheet")
+
+patient_spreadsheet = client.open(
+    "Patient Database"
+)
+
+monitor_spreadsheet = client.open(
+    "Moniter_BPM_OXY"
+)
+
+oxy_spreadsheet = client.open(
+    "Moniter_OXY"
+)
+
 
 # ============================================================
-# BPM SHEET
+# WORKSHEETS
 # ============================================================
-bpm_sheet = client.open("Moniter_BPM_OXY").worksheet("BpmSheet")
 
-# ============================================================
-# OXY SHEET
-# ============================================================
-oxy_sheet = client.open("Moniter_OXY").worksheet("OxySheet")
+patient_sheet = patient_spreadsheet.worksheet(
+    "PatientSheet"
+)
+
+bpm_sheet = monitor_spreadsheet.worksheet(
+    "BpmSheet"
+)
+
+oxy_sheet = oxy_spreadsheet.worksheet(
+    "OxySheet"
+)
+
